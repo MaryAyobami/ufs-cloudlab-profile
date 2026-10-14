@@ -16,7 +16,6 @@ OS_IMAGES = [
     ("urn:publicid:IDN+emulab.net+image+emulab-ops//UBUNTU20-64-STD", "Ubuntu 20.04"),
 ]
 
-
 def main():
     context = portal.Context()
     context.defineParameter(
