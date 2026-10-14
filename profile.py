@@ -46,7 +46,7 @@ def main():
     # The artifact supports its cloudlab setup only on c6525-100g.
     ae_profile = "cloudlab" if params.nodeType == "c6525-100g" else "other"
     node.addService(
-        rspec.Execute(shell="bash", command=f"/local/repository/setup.sh {ae_profile}")
+        rspec.Execute(shell="bash", command="/local/repository/setup.sh {}".format(ae_profile))
     )
 
     context.printRequestRSpec(request)
