@@ -39,12 +39,22 @@ detect_spdk_device() {
 
 check_workspace_partition() {
   # The artifact expects partition 4 of the OS drive to hold its workspace.
-  workspace_partition="/dev/${os_device}p4"
-  [ -b "$workspace_partition" ] || fail "$workspace_partition missing"
-  if [ -n "$(lsblk -no FSTYPE "$workspace_partition")" ] || \
-      findmnt -S "$workspace_partition" >/dev/null 2>&1; then
-    fail "refusing: $workspace_partition already has a filesystem or is mounted"
+  # setup.sh re-runs on every boot, so a prior successful run of this same
+  # script already mounts it at $HOME/workspace by the second boot.
+  local part_name
+  part_name=$(lsblk -lno NAME,TYPE "/dev/$os_device" | awk '$2=="part"{print $1}' | sed -n '4p')
+  [ -n "$part_name" ] || fail "no 4th partition found on /dev/$os_device"
+  workspace_partition="/dev/$part_name"
+
+  local mountpoint
+  mountpoint=$(findmnt -n -o TARGET -S "$workspace_partition" 2>/dev/null || true)
+  if [ -n "$mountpoint" ]; then
+    [ "$mountpoint" = "$HOME/workspace" ] && return
+    fail "refusing: $workspace_partition is mounted at $mountpoint, not $HOME/workspace"
   fi
+
+  [ -z "$(lsblk -no FSTYPE "$workspace_partition")" ] || \
+    fail "refusing: $workspace_partition has a filesystem but isn't mounted; inspect before reusing"
 }
 
 update_ae_script() {

@@ -7,8 +7,15 @@ ae_script="$HOME/artifact_eval.sh"
 patch_dir="$(cd "$(dirname "$0")/patches" && pwd)"
 
 ae() {
+  # ae init writes ~/.ae_env.sh with CFS_ROOT_DIR, KFS_MOUNT_PATH, and the
+  # build binary paths the Python scripts need; .bashrc normally sources it,
+  # but this runs non-interactively so it never gets picked up on its own.
+  # SSD_NAME/SSD_PICE_ADDR in that file are a one-time snapshot ae init never
+  # updates again, so override them with patch 003's fresh per-node values.
+  [ -f "$HOME/.ae_env.sh" ] && . "$HOME/.ae_env.sh"
   AE_BRANCH=sosp-21 AE_UFS_FILEBENCH_BRANCH=sosp-21-filebench-config \
-    GIT_TERMINAL_PROMPT=0 bash "$ae_script" "$@"
+    GIT_TERMINAL_PROMPT=0 SSD_NAME="$AE_SSD_NAME" SSD_PICE_ADDR="$AE_SSD_PICE_ADDR" \
+    bash "$ae_script" "$@"
 }
 
 fetch_ae_script() {
